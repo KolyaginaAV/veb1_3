@@ -461,14 +461,21 @@ body {
 .contacts-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 3rem;
-    justify-content: space-between;
+    gap: 2rem;
+    justify-content: center;
 }
 
-/* Левая колонка */
 .contacts-info {
     flex: 1;
-    min-width: 280px;
+    min-width: 490px;
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+.contacts-map {
+    flex: 2;
+    min-width: 320px;
     background: white;
     border-radius: 16px;
     padding: 2rem;
@@ -493,39 +500,52 @@ body {
 }
 
 /* Правая колонка с картой */
-.contacts-map {
-    flex: 1;
-    min-width: 500px;
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-
-.world-map {
+#interactive-map {
+    height: 400px;
     width: 100%;
-    height: auto;
     border-radius: 12px;
-    display: block;
+    z-index: 1;
 }
 
-/* Адаптация */
-@media (max-width: 800px) {
-    .contacts-grid {
-        flex-direction: column;
-    }
-    
-    .contacts-map {
-        min-width: auto;
-    }
-    
-    .contacts-section {
-        padding: 50px 0;
-    }
-    
-    .contacts-info, .contacts-map {
-        padding: 1.5rem;
-    }
+/* Кнопки континентов в левой колонке */
+.continent-buttons {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e6ed;
+}
+
+.continent-btn {
+    background: #e0e0e0;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #1a2c3e;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.continent-btn:hover {
+    background: #FF6B6B;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.continent-btn:active {
+    transform: translateY(0px);
+}
+
+.map-status {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.8rem;
+    color: #5a6e7c;
 }
 
 
@@ -578,6 +598,13 @@ section {
     .contacts-map {
         min-width: auto;
     }
+    #interactive-map {
+        height: 320px;
+    }
+    .continent-btn {
+        padding: 6px 18px;
+        font-size: 0.85rem;
+    }
     
     .region-btn {
         padding: 6px 18px;
@@ -591,7 +618,7 @@ section {
     .contacts-info, .contacts-map {
         padding: 1.5rem;
     }
-    
+
     /* ===== АДАПТАЦИЯ КАРТОЧЕК ===== */
     .destination-card {
         width: 280px;

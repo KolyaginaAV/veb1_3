@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TravelWorld | Путешествия мечты</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
         /* небольшие дополнения, чтобы картинки корректно отображались */
@@ -196,16 +198,16 @@
                         <p> Пн-Пт: 10:00 - 20:00</p>
                         <p> Сб-Вс: 11:00 - 18:00</p>
                     </div>
+                        <div class="continent-buttons">
+                        <button class="continent-btn" data-continent="asia"> Азия</button>
+                        <button class="continent-btn" data-continent="americas"> Америка</button>
+                        <button class="continent-btn" data-continent="europe"> Европа</button>
+                        <button class="continent-btn" data-continent="africa"> Африка</button>
+                    </div>
                 </div>
                 <!-- Правая колонка с SVG-картой -->
                 <div class="contacts-map">
-                    <div class="map-container">
-                        <img src="images/map.png" class="world-map">
-                        <!-- Красная точка и подпись поверх карты -->
-                        <div class="map-overlay">
-                            <div class="map-dot"></div>
-                        </div>
-                    </div>
+                    <div id="interactive-map"></div>
                 </div>
             </div>
         </div>
@@ -229,6 +231,87 @@
                     if (target) {
                         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
+                }
+            });
+        });
+    </script>
+
+    <script>
+        // Инициализация карты Leaflet
+        const map = L.map('interactive-map').setView([20, 0], 2);
+        //центр карты: широта 20°, долгота 0° (примерно центр Африки)
+        //масштаб: 2 (чем меньше число, тем сильнее отдалено; 0 — весь мир, 18 — дом)
+
+        //добавление тайлов (кирпичиков карты): {s} — подсервер (a, b, c), {z} — уровень масштаба,
+        //{x} и {y} — координаты тайла на этом уровне; .addTo(map) — добавляет этот слой на карту
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        let currentCircle = null; //ссылка на нарисованную окружность
+
+        function removeCircle() { //удаление предыдущей окружности
+            if (currentCircle) {
+                map.removeLayer(currentCircle);
+                currentCircle = null;
+            }
+        }
+
+        function drawCircle(lat, lng, continentName) { //функция отрисовки окружности
+            removeCircle();
+            currentCircle = L.circle([lat, lng], { //lat - широта; lng - долгота
+                color: '#FF6B6B',
+                fillColor: '#FF8C5A',
+                fillOpacity: 0.3, //прозрачность внутри окружности
+                radius: 1500000,
+                weight: 3 //толщина границы в пикселях
+            }).addTo(map); //добавляем круг на карту
+            map.flyTo([lat, lng], 4, { duration: 1 });  // плавно летим к центру круг
+            // flyTo: координаты, масштаб 4 (приближаем), время анимации 1 секунда
+        }
+
+        function fetchContinent(continentName, searchQuery) {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=ru&format=json`;
+            
+           fetch(url, { // отправляем запрос
+                headers: { 
+                    'User-Agent': 'TravelWorld/1.0 (https://travelworld.ru; contact@travelworld.ru)' 
+                }
+            })
+            .then(response => response.json()) //преобразуем ответ в JSON
+            .then(data => { //обрабатываем полученные данные
+                if (data && data.length > 0) {
+                    //берём широту и долготу из ответа API
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    drawCircle(lat, lon, continentName); //рисуем круг с координатами от API
+                } else {
+                    throw new Error('Нет данных');
+                }
+            })
+            //если API не ответил — используем запасные координаты из справочника
+            .catch(() => {
+                // Резервные координаты
+                let fallback = { lat: 0, lng: 0 };
+                switch(continentName) {
+                    case 'Азия': fallback = { lat: 34.05, lng: 100.62 }; break;
+                    case 'Америка': fallback = { lat: 39.83, lng: -98.58 }; break;
+                    case 'Европа': fallback = { lat: 54.53, lng: 15.26 }; break;
+                    case 'Африка': fallback = { lat: 8.78, lng: 34.51 }; break;
+                }
+                drawCircle(fallback.lat, fallback.lng, `${continentName} (резервные координаты)`);
+            });
+        }
+
+        // Обработчики кнопок
+        document.querySelectorAll('.continent-btn').forEach(btn => { //находит все кнопки с классом continent-btn
+            btn.addEventListener('click', () => {                       //для каждой кнопки добавляем обработчик
+                const continent = btn.dataset.continent;
+                switch(continent) { //в зависимости от нажатой кнопки вызывает fetchContinent с нужными параметрами
+                    case 'asia': fetchContinent('Азия', 'Asia continent'); break;
+                    case 'americas': fetchContinent('Америка', 'Americas continent'); break;
+                    case 'europe': fetchContinent('Европа', 'Europe continent'); break;
+                    case 'africa': fetchContinent('Африка', 'Africa continent'); break;
                 }
             });
         });
